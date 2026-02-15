@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Gmail POP3 Quick Check
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  Adds functionality to quickly check POP3 mail in Gmail
 // @author       Peter Vojnisek
 // @match        https://mail.google.com/mail/*
 // @grant        none
+// @run-at       document-idle
 // ==/UserScript==
 
 (function() {
@@ -17,15 +18,15 @@
         const checkMailLink = document.querySelector('a[href*="ClientAction=PopCheckNow"]');
         if (checkMailLink) {
             checkMailLink.click();
-            console.log('Direct mail check triggered');
+            console.log('[POP3] Direct mail check triggered');
             return;
         }
 
         // If direct link isn't found, navigate to settings
         window.location.hash = "#settings/accounts";
-        console.log('Navigating to settings page');
-        
-        // Add a one-time listener for the settings page load
+        console.log('[POP3] Navigating to settings page');
+
+        // Wait for settings page to load, then click check buttons
         const checkSettingsLoad = setInterval(() => {
             if (document.getElementsByClassName("rP sA").length > 0) {
                 clearInterval(checkSettingsLoad);
@@ -41,52 +42,61 @@
             return;
         }
 
-        // Create button with a unique identifier
+        // Find the right-side header icons (help, settings, apps)
+        // and prepend button there - naturally sits between search bar and icons
+        const headerIcons = document.querySelector('div[aria-label="Support"]')?.closest('div.gb_j') ||
+                            document.querySelector('a[aria-label="Settings"]')?.parentElement?.parentElement ||
+                            document.querySelector('div[gh="s"]'); // settings container
+        if (!headerIcons) {
+            return;
+        }
+
         const buttonContainer = document.createElement('div');
         buttonContainer.setAttribute('data-pop3-check-button', 'true');
-        buttonContainer.innerHTML = `
-            <div class="G-Ni J-J5-Ji" style="margin-right: 8px;">
-                <div class="T-I T-I-KE L3" role="button" style="user-select: none;">
-                    Check POP3
-                </div>
-            </div>`;
+        buttonContainer.style.cssText = [
+            'display: flex',
+            'align-items: center',
+            'margin-right: 8px'
+        ].join('; ');
 
-        // Add click handler
-        buttonContainer.querySelector('.T-I').addEventListener('click', checkMail);
+        const button = document.createElement('div');
+        button.textContent = 'CHECK POP3';
+        button.setAttribute('role', 'button');
+        button.style.cssText = [
+            'background-color: #d93025',
+            'color: #fff',
+            'font-weight: bold',
+            'font-size: 13px',
+            'padding: 6px 16px',
+            'border-radius: 4px',
+            'cursor: pointer',
+            'user-select: none',
+            'letter-spacing: 0.5px',
+            'white-space: nowrap'
+        ].join('; ');
 
-        // Try multiple possible toolbar selectors
-        const toolbarSelectors = [
-            '.G-atb',
-            'div[role="banner"] div[role="toolbar"]',
-            '.aeH'
-        ];
+        button.addEventListener('mouseenter', () => { button.style.backgroundColor = '#b5221b'; });
+        button.addEventListener('mouseleave', () => { button.style.backgroundColor = '#d93025'; });
+        button.addEventListener('click', () => {
+            console.log('[POP3] Button clicked');
+            checkMail();
+        });
 
-        // Find the toolbar using multiple possible selectors
-        let toolbar = null;
-        for (const selector of toolbarSelectors) {
-            toolbar = document.querySelector(selector);
-            if (toolbar) break;
-        }
+        buttonContainer.appendChild(button);
 
-        if (toolbar) {
-            // Try to find the settings gear icon as insertion point
-            let insertionPoint = toolbar.querySelector('.G-tF') || 
-                               toolbar.querySelector('div[role="button"][aria-label*="Settings"]') ||
-                               toolbar.lastChild;
-            
-            toolbar.insertBefore(buttonContainer, insertionPoint);
-            console.log('Button successfully added to toolbar');
-        }
+        // Prepend before the header icons
+        headerIcons.parentNode.insertBefore(buttonContainer, headerIcons);
+        console.log('[POP3] Button added next to header icons');
     }
 
     // Function to handle the settings page actions
     function handleSettingsPage() {
         if (location.hash === "#settings/accounts") {
             const refreshButtons = document.getElementsByClassName("rP sA");
-            for (let button of refreshButtons) {
-                button.click();
-                console.log('POP3 refresh triggered on settings page');
-                
+            for (let btn of refreshButtons) {
+                btn.click();
+                console.log('[POP3] POP3 refresh triggered on settings page');
+
                 // Return to inbox after a delay
                 setTimeout(() => {
                     window.location.hash = "inbox";
@@ -96,47 +106,33 @@
         }
     }
 
-    // More robust MutationObserver setup
+    // Persistent observer - keeps the button alive across Gmail SPA navigation
     function initializeObserver() {
-        let attemptCount = 0;
-        const maxAttempts = 10;
-        
+        let debounceTimer = null;
+
         const observer = new MutationObserver(() => {
-            attemptCount++;
-            
-            // Try to add the button
-            addCheckButton();
-            
-            // If we've made several attempts or button exists, disconnect
-            if (attemptCount >= maxAttempts || document.querySelector('[data-pop3-check-button]')) {
-                observer.disconnect();
-                console.log('Observer disconnected after', attemptCount, 'attempts');
-            }
+            // Debounce: Gmail fires many mutations at once
+            if (debounceTimer) return;
+            debounceTimer = setTimeout(() => {
+                debounceTimer = null;
+                addCheckButton();
+            }, 300);
         });
 
-        // Observe both body and specific Gmail containers
         observer.observe(document.body, {
             childList: true,
-            subtree: true,
-            attributes: true
+            subtree: true
         });
-
-        // Backup timeout to try one last time
-        setTimeout(() => {
-            if (!document.querySelector('[data-pop3-check-button]')) {
-                addCheckButton();
-            }
-        }, 5000);
     }
 
-    // Initialize everything
-    window.addEventListener('load', () => {
-        initializeObserver();
-        if (location.hash === "#settings/accounts") {
-            handleSettingsPage();
-        }
-    });
+    // Initialize immediately (don't wait for load event - it may have already fired)
+    addCheckButton();
+    initializeObserver();
 
     // Handle navigation changes
-    window.addEventListener('hashchange', handleSettingsPage);
+    window.addEventListener('hashchange', () => {
+        handleSettingsPage();
+        // Gmail rebuilds toolbar on navigation - re-add button after a short delay
+        setTimeout(addCheckButton, 1000);
+    });
 })();

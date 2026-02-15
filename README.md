@@ -37,7 +37,7 @@ Before installing the script, ensure you have one of these browser extensions in
 After installation, using the script is straightforward:
 
 1. Open Gmail in your browser
-2. Look for the "Check POP3" button in Gmail's toolbar (next to the settings gear icon)
+2. Look for the red "CHECK POP3" button in Gmail's header (to the left of the help/settings icons)
 3. Click the button to check all configured POP3 accounts
 4. Wait a few seconds while the check completes
 5. The page will automatically return to your inbox
@@ -79,6 +79,12 @@ This script:
 
 ## Version History
 
+- v1.4 (2026-02-15)
+  - Fixed button not appearing due to script timing (run-at document-idle)
+  - Moved button to header area (next to help/settings icons) for better placement
+  - Custom button styling (no longer relies on Gmail internal CSS classes)
+  - Persistent MutationObserver with debounce for reliable button re-insertion
+  - Fixed click handler being blocked by Gmail toolbar overlay
 - v1.3 (2025-01-14)
   - Added automatic return to inbox
   - Improved button placement reliability
