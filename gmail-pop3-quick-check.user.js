@@ -1,12 +1,15 @@
 // ==UserScript==
 // @name         Gmail POP3 Quick Check
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  Adds functionality to quickly check POP3 mail in Gmail
 // @author       Peter Vojnisek
 // @match        https://mail.google.com/mail/*
 // @grant        none
 // @run-at       document-idle
+// @homepageURL  https://github.com/pvojnisek/gmail-pop3-quick-check
+// @downloadURL  https://raw.githubusercontent.com/pvojnisek/gmail-pop3-quick-check/main/gmail-pop3-quick-check.user.js
+// @updateURL    https://raw.githubusercontent.com/pvojnisek/gmail-pop3-quick-check/main/gmail-pop3-quick-check.user.js
 // ==/UserScript==
 
 (function() {

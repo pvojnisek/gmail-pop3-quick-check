@@ -19,17 +19,24 @@ The script enhances Gmail's functionality by providing:
 
 ### Prerequisites
 
-Before installing the script, ensure you have one of these browser extensions installed:
+Install a userscript manager. On current Chromium (Chrome/Brave/Edge **150+**),
+**[ScriptCat](https://docs.scriptcat.org/)** is the recommended choice for reliable
+operation — it's open source (GPL-3.0) and Manifest V3.
 
-- Firefox: [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/)
-- Chrome: [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
-- Edge: [Tampermonkey](https://microsoftedge.microsoft.com/addons/detail/tampermonkey/iikmkjmpaadaobahmlepeloendndfphd)
+> ⚠️ **Violentmonkey does not work on Chromium 150+ right now** — it is still
+> Manifest V2, which Chromium 150 removed, so the browser force-disables it (its MV3
+> build isn't released yet). Use ScriptCat until then. Tampermonkey also works but is
+> proprietary. On **Firefox**, Greasemonkey or Violentmonkey are fine.
+
+After installing on Chromium (**138+**), enable user scripts:
+`chrome://extensions` → your manager → **Details** → **Allow user scripts**.
 
 ### Installing the Script
 
-1. Install Greasemonkey/Tampermonkey if you haven't already
-2. Click on this link to install the script: [Install Gmail POP3 Quick Check](../../raw/main/gmail-pop3-quick-check.user.js)
-3. When prompted by your userscript manager, click "Install"
+1. Install a userscript manager (ScriptCat recommended — see above).
+2. Click this link to install the script: [Install Gmail POP3 Quick Check](../../raw/main/gmail-pop3-quick-check.user.js)
+3. When prompted by your userscript manager, click "Install". Thanks to `@updateURL`,
+   it then auto-updates from this repo when a newer version is pushed.
 4. Refresh Gmail if it's already open
 
 ## Usage
@@ -79,6 +86,11 @@ This script:
 
 ## Version History
 
+- v1.5 (2026-07-03)
+  - Added `@downloadURL`/`@updateURL` (and `@homepageURL`) so userscript managers
+    auto-update the script from this repo
+  - Docs: recommend ScriptCat (open source, Manifest V3) for reliable operation on
+    current Chromium; note Violentmonkey is force-disabled on Chromium 150+
 - v1.4 (2026-02-15)
   - Fixed button not appearing due to script timing (run-at document-idle)
   - Moved button to header area (next to help/settings icons) for better placement
